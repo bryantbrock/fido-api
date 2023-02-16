@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Buyer {
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  email         String    @unique
+  passhash      String
+  name          String?
+  line1         String?
+  line2         String?
+  city          String?
+  state         String?
+  zip           String?
+  reviews       Review[]
+  transactions  Transaction[]
+  payments      Payment[]
+  methods       Method[]
+  @@map("buyers")
+}
+
+model Seller {
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  email         String    @unique
+  passhash      String
+  line1         String?
+  line2         String?
+  city          String?
+  state         String?
+  zip           String?
+  name          String?
+  reviews       Review[]
+  services      Service[]
+  transactions  Transaction[]
+  payouts       Payout[]
+  methods       Method[]
+  @@map("sellers")
+}
+
+model Payment {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  amount    Int
+  method    Method    @relation(fields: [methodId], references: [id])
+  methodId  Int
+  buyer     Buyer    @relation(fields: [buyerId], references: [id])
+  buyerId   Int
+  @@map("payments")
+}
+
+model Payout {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  amount    Int
+  method    Method    @relation(fields: [methodId], references: [id])
+  methodId  Int
+  seller    Seller    @relation(fields: [sellerId], references: [id])
+  sellerId  Int
+  @@map("payouts")
+}
+
+model Method {
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  type      String
+  token     String
+  buyer     Buyer?    @relation(fields: [buyerId], references: [id])
+  buyerId   Int?
+  seller    Seller?   @relation(fields: [sellerId], references: [id])
+  sellerId  Int?
+  payouts   Payout[]
+  payments  Payment[]
+  @@map("methods")
+}
+
+model Transaction {
+  id        Int     @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+  amount    Int
+  fees      Int?
+  discounts Int?
+  payment   String
+  startDate DateTime?
+  endDate   DateTime?
+  service   Service  @relation(fields: [serviceId], references: [id])
+  serviceId Int
+  buyer     Buyer    @relation(fields: [buyerId], references: [id])
+  buyerId   Int
+  seller    Seller   @relation(fields: [sellerId], references: [id])
+  sellerId  Int
+  @@map("transactions")
+}
+
+model Service {
+  id            Int           @id @default(autoincrement())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @default(now())
+  title         String
+  description   String
+  attachments   Attachment[]
+  reviews       Review[]
+  transactions  Transaction[]
+  seller        Seller        @relation(fields: [sellerId], references: [id])
+  sellerId      Int
+  @@map("services")
+}
+
+model Review {
+  id          Int     @id @default(autoincrement())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+  title       String
+  content     String?
+  rating      Int
+  attachments Attachment[]
+  buyer       Buyer    @relation(fields: [buyerId], references: [id])
+  buyerId     Int
+  seller      Seller   @relation(fields: [sellerId], references: [id])
+  sellerId    Int
+  service     Service?   @relation(fields: [serviceId], references: [id])
+  serviceId   Int?
+  @@map("reviews")
+}
+
+model Attachment {
+  id        Int     @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  url       String
+  service   Service @relation(fields: [serviceId], references: [id])
+  serviceId Int
+  review    Review @relation(fields: [reviewId], references: [id])
+  reviewId  Int
+  @@map("attachments")
+}
+
