@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["filteredRelationCount"]
 }
 
 datasource db {
@@ -7,137 +8,98 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Buyer {
-  id            Int       @id @default(autoincrement())
-  createdAt     DateTime  @default(now())
-  email         String    @unique
+model Guard {
+  id            Int             @id @default(autoincrement())
+  createdAt     DateTime        @default(now())
+  email         String          @unique
   passhash      String
-  name          String?
-  line1         String?
-  line2         String?
-  city          String?
-  state         String?
-  zip           String?
-  reviews       Review[]
-  transactions  Transaction[]
-  payments      Payment[]
-  methods       Method[]
-  @@map("buyers")
-}
-
-model Seller {
-  id            Int       @id @default(autoincrement())
-  createdAt     DateTime  @default(now())
-  email         String    @unique
-  passhash      String
+  bio           String?
   line1         String?
   line2         String?
   city          String?
   state         String?
   zip           String?
   name          String?
+  avatar        String?
+  rate          Int?
+  avgRating     Float?
+  occupation    String?
   reviews       Review[]
-  services      Service[]
-  transactions  Transaction[]
-  payouts       Payout[]
-  methods       Method[]
-  @@map("sellers")
+  hirings       Hire[]
+  GuardFeatures GuardFeatures[]
 }
 
-model Payment {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  amount    Int
-  method    Method    @relation(fields: [methodId], references: [id])
-  methodId  Int
-  buyer     Buyer    @relation(fields: [buyerId], references: [id])
-  buyerId   Int
-  @@map("payments")
-}
-
-model Payout {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  amount    Int
-  method    Method    @relation(fields: [methodId], references: [id])
-  methodId  Int
-  seller    Seller    @relation(fields: [sellerId], references: [id])
-  sellerId  Int
-  @@map("payouts")
-}
-
-model Method {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  type      String
-  token     String
-  buyer     Buyer?    @relation(fields: [buyerId], references: [id])
-  buyerId   Int?
-  seller    Seller?   @relation(fields: [sellerId], references: [id])
-  sellerId  Int?
-  payouts   Payout[]
-  payments  Payment[]
-  @@map("methods")
-}
-
-model Transaction {
-  id        Int     @id @default(autoincrement())
+model Guarded {
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  updatedAt DateTime @default(now())
-  amount    Int
-  fees      Int?
-  discounts Int?
-  payment   String
-  startDate DateTime?
-  endDate   DateTime?
-  service   Service  @relation(fields: [serviceId], references: [id])
-  serviceId Int
-  buyer     Buyer    @relation(fields: [buyerId], references: [id])
-  buyerId   Int
-  seller    Seller   @relation(fields: [sellerId], references: [id])
-  sellerId  Int
-  @@map("transactions")
+  email     String   @unique
+  passhash  String
+  name      String?
+  line1     String?
+  line2     String?
+  city      String?
+  state     String?
+  zip       String?
+  avatar    String?
+  avgRating Float?
+  reviews   Review[]
+  hirings   Hire[]
 }
 
-model Service {
-  id            Int           @id @default(autoincrement())
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @default(now())
-  title         String
-  description   String
-  attachments   Attachment[]
+model Hire {
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now())
+  amount        Int
+  fees          Int?
+  discounts     Int?
+  payment       String
+  endDateTime   DateTime?
+  startDateTime DateTime?
+  line1         String?
+  line2         String?
+  city          String?
+  state         String?
+  zip           String?
+  guard         Guard     @relation(fields: [guardId], references: [id])
+  guardId       Int
+  guarded       Guarded   @relation(fields: [guardedId], references: [id])
+  guardedId     Int
   reviews       Review[]
-  transactions  Transaction[]
-  seller        Seller        @relation(fields: [sellerId], references: [id])
-  sellerId      Int
-  @@map("services")
 }
 
 model Review {
-  id          Int     @id @default(autoincrement())
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @default(now())
-  title       String
-  content     String?
-  rating      Int
-  attachments Attachment[]
-  buyer       Buyer    @relation(fields: [buyerId], references: [id])
-  buyerId     Int
-  seller      Seller   @relation(fields: [sellerId], references: [id])
-  sellerId    Int
-  service     Service?   @relation(fields: [serviceId], references: [id])
-  serviceId   Int?
-  @@map("reviews")
-}
-
-model Attachment {
-  id        Int     @id @default(autoincrement())
+  id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  url       String
-  service   Service @relation(fields: [serviceId], references: [id])
-  serviceId Int
-  review    Review @relation(fields: [reviewId], references: [id])
-  reviewId  Int
-  @@map("attachments")
+  updatedAt DateTime @default(now())
+  title     String
+  content   String?
+  rating    Int
+  guard     Guard    @relation(fields: [guardId], references: [id])
+  guardId   Int
+  guarded   Guarded  @relation(fields: [guardedId], references: [id])
+  guardedId Int
+  hire      Hire?    @relation(fields: [hireId], references: [id])
+  hireId    Int?
 }
 
+model GuardFeatures {
+  id                        Int      @id @default(autoincrement())
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @default(now())
+  guard                     Guard    @relation(fields: [guardId], references: [id])
+  guardId                   Int      @unique
+  yearsOfMilitaryExpeirence Int?
+  hasGeoTrackingEnabled     Boolean?
+  hasMicrophoneEnabled      Boolean?
+  hasBodyCamEnabled         Boolean?
+  hasInsurance              Boolean?
+  hasBackgroundCheck        Boolean?
+  hasASRBCertification      Boolean?
+  hasAPOSTCertification     Boolean?
+  hasCprCertification       Boolean?
+  hasFirstAidCertification  Boolean?
+  hasOwnTransportation      Boolean?
+  hasOwnWeapon              Boolean?
+  hasOwnUniform             Boolean?
+}
